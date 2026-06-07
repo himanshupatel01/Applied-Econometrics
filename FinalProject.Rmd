@@ -1,0 +1,233 @@
+---
+title: "Final Project"
+author: "Himanshu Patel"
+date: "2026-04-05"
+output: pdf_document
+---
+```{r setup, include=FALSE}
+library(haven)
+library(dplyr)
+library(ggplot2)
+library(stargazer)
+```
+
+# Introduction 
+This project examines the factors influencing individuals’ worry about being a victim of crime. In particular, it focuses on how demographic and socioeconomic characteristics such as gender, income, age, education, and ethnicity are associated with perceived levels of worry. Understanding these relationships is important because perceptions of crime can influence individuals' behaviour, well being, and trust in public institutions.
+
+From a policy perspective, identifying groups that experience higher levels of worry can help inform targeted interventions aimed at improving public safety and reducing the fear of crime. This study uses survey data to analyse these relationships through descriptive statistics and regression techniques. 
+
+# Literature Review
+Existing research highlights that the fear of crime varies systematically across different demographic and socioeconomic groups. One of the most consistent findings is the presence of gender differences in perceived fear. Ferraro (1995) argues that women tend to report higher levels of fear of crime, not necessarily due to higher victimisation rates, but because of greater perceived vulnerability and social conditioning. This suggests that fear of crime is shaped not only by actual risk but also by subjective perceptions of safety. 
+
+Hale (1996) finds that demographic characteristics such as age, gender, and income play a significant role in shaping the fear of crime. In particular, individuals with lower income levels tend to report higher levels of fear, which may reflect the differences in living environments and exposure to crime.
+
+Further studies also emphasise the importance of socioeconomic status in influencing perceptions of crime. Higher-income individuals are generally less worried about crime, potentially due to access to safer neighbourhoods and greater resources for protection. Age has shown mixed effects, although some evidence suggests that older individuals may feel more vulnerable. Education is also an important socioeconomic factor. Individuals with higher levels of education may have greater access to information, improved economic opportunities, and increased awareness of actual crime risk, which can reduce the perceived fear. 
+
+Overall, the literature suggests that the fear of crime is influenced by a combination of demographic and socioeconomic factors. This project will build on these findings by examining how gender, income, age, education, and ethnicity are associated with worry about crime using survey data. 
+
+# Data 
+The data used in this study comes from the Crime Survey for England and Wales, 2017-2018 teaching dataset. The key dependent variable is *worryx*, which measures an individual's level of worry about being a victim of crime. The main explanatory variables include gender (*sex*), personal income (*persinc*), age (*agegrp7*), education (*educat3*), ethnicity (*ethgrp2a*). These variables will allow us to examine how demographic and socioeconomic factors influence perceptions of crime. 
+
+```{r}
+csew <- read_sav("~/Downloads/csew_1718_teaching.sav")
+# Clean missing values
+csew$worryx[csew$worryx < 0] <- NA
+csew$persinc[csew$persinc < 0] <- NA
+csew$age[csew$agegrp7 < 0] <- NA
+csew$sex[csew$sex < 0] <- NA
+csew$educat3[csew$educat3 < 0] <- NA
+csew$ethgrp2a[csew$ethgrp2a < 0] <- NA
+
+# Create dataset
+df3 <- csew %>%
+  select(worryx, persinc, age, sex, educat3, ethgrp2a) %>%
+  na.omit()
+# Summary statistics
+df_sum <- df3 %>%
+  select(worryx, persinc, age, educat3) %>%
+  mutate(
+    across(everything(), as.numeric)
+  ) %>%
+  as.data.frame()
+stargazer(df_sum,
+          type = "text",
+          title = "Summary Statistics",
+          digits = 3)
+```
+
+Table 1 presents summary statistics for the main variables. The average level of worry is 0.769, with variation across individuals. Income, age, and education also show substantial variation, indicating a diverse sample.
+
+```{r}
+ggplot(df3, aes(x = worryx)) +
+  geom_histogram(binwidth = 0.5, fill='blue', alpha = 0.7) +
+  theme_minimal() +
+  labs(title = "Distribution of Worry about Crime",
+       x = "Worry about Crime",
+       y = "Frequency")
+```
+
+Figure 1 shows the distribution of worry about crime, indicating that most individuals report low to moderate levels of concern.
+
+# Methodology 
+This study uses both descriptive and econometric methods to analyse the relationship between demographic and socioeconomic factors and worry about crime. Initially, descriptive statistics and visualisations are used to explore the patterns in the data. The main analysis is conducted using ordinary least squares (OLS) regression, where worry about crime is regressed on income, age, gender, education, and ethnicity. Two models are estimated: a baseline model which includes income and age, and an extended model that adds additional control variables. Statistical significance is assessed using standard t-tests and ANOVA tests, and model fit is evaluated using R-squared. 
+
+# Results
+This section presents the empirical findings on the relationship between demographic and socioeconomic factors and worry about crime. 
+
+---
+
+The relationship between income and worry about crime is first examined using mean comparisons and a scatter plot.
+
+```{r}
+df1 <- csew %>%
+  select(worryx, persinc) %>%
+  na.omit()
+df1 %>%
+  group_by(persinc) %>%
+  summarise(mean_worry = mean(worryx),
+            n = n())
+```
+This table shows that the average level of worry generally decreases as income increases. For example, individuals in lower income groups report higher levels of worry compared to those in higher income brackets.
+
+```{r}
+ggplot(df1, aes(x = persinc, y = worryx)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method = "lm") +
+  labs(title = "Income and Worry about Crime",
+       x = "Personal income (persinc)",
+       y = "Worry about crime (worryx)")
+```
+This pattern is further supported by this scatter plot, which displays a negative relationship between personal income and worry about crime. The fitted regression line indicates that individuals with higher income levels tend to report lower levels of concern about being a victim of crime. 
+
+These findings are consistent with the idea that higher-income individuals may have access to safer neighbourhoods and greater resources for protection, reducing their perceived vulnerability to crime. 
+
+---
+
+Next, the relationship between age and worry about crime is examined using grouped mean comparisons and a scatter plot.
+
+```{r}
+df2 <- csew %>%
+  select(worryx, age) %>%
+  na.omit()
+df2 %>%
+  mutate(age_group = cut(age, breaks = c(0,16,30,45,60,75,100))) %>%
+  group_by(age_group) %>%
+  summarise(mean_worry = mean(worryx),
+            n = n())
+```
+This table shows that, with the exception of the youngest group, the average level of worry remains relatively similar across age groups. For most groups, mean worry levels range between approximately 0.74 and 0.81, indicating limited variation.
+
+```{r}
+ggplot(df2, aes(x = age, y = worryx)) +
+  geom_jitter(alpha = 0.3, width = 0.4, height = 0.02) +
+  geom_smooth(method = "lm", se = FALSE) +
+  labs(title = "Age and Worry about Crime",
+    x = "Age of respondent",
+    y = "Worry about being a victim of crime (worryx)"
+  )
+```
+This scatter plot supports this finding, as the fitted regression line is relatively flat, suggesting little evidence of a strong relationship between age and worry about crime. 
+
+Overall, these results indicate that age does not appear to be a major determinant of perceived worry about crime in this sample, although slight differences across age groups may still exist. 
+
+---
+
+To further examine these relationships, a baseline regression model is estimated, including income and age. The results are presented in the table below.
+
+```{r}
+m1 <- lm(worryx ~ persinc + age, data = df3)
+stargazer(m1,
+          type = "text",
+          title = "Baseline Regression Results",
+          dep.var.labels = "Worry about Crime",
+          covariate.labels = c("Income", "Age"),
+          digits = 3)
+```
+The coefficient on income is negative and statistically significant at the 1% level. Specifically, a one-unit increase in income is associated with a 0.024 decrease in worry about crime. This confirms the earlier descriptive findings, suggesting that individuals with higher income tend to feel less concerned about being victims of crime, potentially due to access to safer environments and greater resources for protection.
+
+In contrast, the coefficient on age is small and statistically insignificant, indicating that there is no strong evidence of a relationship between age and worry about crime. This is consistent with the earlier graphical analysis, which showed little variation in worry across age groups.
+
+The overall explanatory power of the model is relatively low, with an R² of 0.012, suggesting that income and age alone explain only a small proportion of the variation in worry about crime. This indicates that additional factors may be important in determining individuals’ perceptions of crime.
+
+---
+
+A t-test was conducted to examine whether worry about crime differs by gender. The results show a statistically significant difference in mean worry levels between males and females (p < 0.01). 
+
+```{r}
+df3$sex <- factor(df3$sex,
+                  levels = c(1, 2),
+                  labels = c("Male", "Female"))
+t_test_gender <- t.test(worryx ~ sex, data = df3)
+aggregate(worryx ~ sex, data = df3, mean)
+```
+On average, females report higher levels of worry (0.828) compared to males (0.660), indicating that gender is an important factor influencing perceptions of crime. This finding is consistent with existing literature, which suggests that women tend to perceive higher levels of vulnerability to crime.
+
+---
+
+An ANOVA test was conducted to examine whether worry about crime differs across ethnic groups. The results show strong evidence of differences in mean worry levels between groups (p < 0.01), indicating that ethnicity is a statistically significant factor.
+```{r}
+df3$ethgrp2a <- factor(df3$ethgrp2a,
+                       levels = c(1, 2, 3, 4, 5),
+                       labels = c("White",
+                                  "Mixed",
+                                  "Asian or Asian British",
+                                  "Black or Black British",
+                                  "Chinese or Other"))
+anova_eth <- aov(worryx ~ factor(ethgrp2a), data = df3)
+aggregate(worryx ~ ethgrp2a, data = df3, mean)
+```
+Mean comparisons suggest that worry about crime varies substantially across ethnic groups. For example, individuals identifying as Asian or Asian British report an average worry level of 1.290, compared to 0.708 for White individuals, highlighting considerable variation across groups. 
+
+These findings suggest that ethnicity plays an important role in shaping perceptions of crime, potentially reflecting differences in lived experiences, social environments, or exposure to risk.
+
+---
+
+Model 2 extends the baseline specification by including additional control variables for gender, education, and ethnicity. The results are presented in the table below. 
+```{r}
+m2 <- lm(worryx ~ persinc + age + sex + educat3 + ethgrp2a, data = df3)
+stargazer(m1, m2,
+          type = "text",
+          title = "Model comparison",
+          dep.var.labels = "Worry about Crime",
+          column.labels = c("Baseline", "Full Model"),
+          covariate.labels = c("Income", "Age", "Gender", "Education",
+                               "Mixed", "Asian or Asian British", "Black or Black British", "Chinese or Other"), 
+          digits = 3)
+```
+The coefficient on income remains negative and statistically significant at the 1% level. Specifically, a one-unit increase in income is associated with a 0.017 decrease in worry about crime. Although the magnitude is slightly smaller than in the baseline model, the effect remains robust, indicating that higher-income individuals consistently report lower levels of worry even after controlling for other demographic characteristics. 
+
+Age remains statistically insignificant, suggesting that it still does not have a meaningful relationship with worry about crime once other factors are taken into account. 
+
+The coefficient on gender is positive and highly significant, indicating that females report higher levels of worry about crime compared to males. This is consistent with the earlier t-test results and supports the idea that perceived vulnerability differs by gender.
+
+Education has a negative and statistically significant effect, with a one-unit increase in education associated with a 0.040 decrease in worry about crime. This suggests that individuals with higher levels of education may feel less vulnerable, potentially due to better access to information about actual crime risk and improved economic opportunities which enables individuals to reside in safer environments.  
+
+The ethnicity variables are jointly significant, with several groups showing higher levels of worry compared to the reference category of White individuals. In particular, individuals identifying as Asian or Asian British and Black or Black British report substantially higher levels of worry, with relatively large and statistically significant coefficients. Individuals from Mixed and Chinese or Other backgrounds also report higher levels of worry, although these effects are smaller and less precisely estimated.
+
+The explanatory power of the model improves compared to the baseline model, with R² increasing from 0.012 to 0.065. While this represents an improvement, the relatively low R² suggests that a large proportion of variation in worry about crime remains unexplained, indicating that other factors not included in the model may also be important.
+
+Overall, the results highlight that both socioeconomic and demographic factors play a significant role in shaping individuals’ perceptions of crime, with income, gender, education, and ethnicity emerging as key determinants. However, it is important to note that these results represent correlations rather than causal relationships, as unobserved factors may influence both the explanatory variables and perceived worry about crime.
+
+# Conclusion
+This study examined the relationship between demographic and socioeconomic factors and worry about crime using survey data. The results show that income, gender, education, and ethnicity are significant determinants of perceived worry, while age does not appear to have a meaningful effect. In particular, higher-income and more educated individuals report lower levels of worry, whereas females and certain ethnic groups report higher levels.
+
+These findings have important policy implications, suggesting that efforts to reduce fear of crime may need to be targeted towards more vulnerable groups. Improving access to information and addressing inequalities in living conditions may help reduce perceived risk.
+
+However, the relatively low explanatory power of the model indicates that there are other factors not included in the analysis, such as past victimisation or neighbourhood characteristics, that may also play an important role. Future research could explore these factors to gain a more comprehensive understanding of fear of crime.
+
+## References
+Ferraro, K.F. (1995). Fear of Crime: Interpreting Victimization Risk. SUNY Press.
+
+Hale, C. (1996). Fear of Crime: A Review of the Literature. International Review of Victimology, 4(2), 79–150.
+
+Crime Survey for England and Wales (2017–2018) Teaching Dataset. UK Data Service.
+
+
+
+
+
+
+
+
+
+
