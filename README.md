@@ -1,7 +1,7 @@
 # Applied Econometrics: Socioeconomic Determinants of the Fear of Crime
 
 ## 📌 Project Overview
-This project applies econometric and statistical methods to analyse the demographic and socioeconomic factors that influence an individual's perceived worry about being a victim of crime. Utilising the **Crime Survey for England and Wales (CSEW) 2017-2018 teaching dataset**, the study evaluates the correlations between personal income, age, gender, education, and ethnicity and public safety perceptions. 
+This project applies econometric and statistical methods to analyse the demographic and socioeconomic factors that influence an individual's perceived worry about being a victim of crime. Utilizing the **Crime Survey for England and Wales (CSEW) 2017-2018 teaching dataset**, the study evaluates how personal income, age, gender, education, and ethnicity correlate with public safety perceptions. 
 
 The repository showcases a full data pipeline in R, spanning from structural missing-value filtration to bi-variate statistical testing and multi-variable Ordinary Least Squares (OLS) linear regressions.
 
@@ -22,7 +22,7 @@ The repository showcases a full data pipeline in R, spanning from structural mis
 * **Distribution Mapping:** Plotted sample densities using `ggplot2`, showing a right-skewed metric where most respondents report low-to-moderate levels of crime worry.
 
 ### 2. Hypothesis Testing & Mean Comparisons
-* **Gender Disparity (t-test):** Executed an independent t-test confirming a highly significant gap (p < 0.01). On average, females report higher baseline worry levels (0.828) than males (0.660), aligning with vulnerability theories in the criminological literature.
+* **Gender Disparity (t-test):** Executed an independent t-test confirming a highly significant gap (p < 0.01). On average, females report higher baseline worry levels (0.828) compared to males (0.660), aligning with vulnerability theories in criminological literature.
 * **Ethnic Variation (ANOVA):** Deployed a one-way Analysis of Variance (p < 0.01) showing strong variations across ethnic backgrounds. The highest mean worry was observed among Asian/Asian British respondents (1.290) compared to White respondents (0.708).
 
 ### 3. Econometric Modeling & OLS Comparison (N = 3,389)
